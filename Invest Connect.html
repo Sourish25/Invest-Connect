@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Invest Connect</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --text-primary: #111827;
+            --text-secondary: #4b5563;
+            --border-color: #d1d5db;
+            --accent-color: #000000;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #000000;
+            --bg-secondary: #111827;
+            --text-primary: #ffffff;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+            --accent-color: #ffffff;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+        }
+
+        /* Hide scrollbars */
+        ::-webkit-scrollbar { display: none; }
+        html { scrollbar-width: none; }
+        
+        /* Main app container */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            margin: 0 auto;
+            background-color: var(--bg-primary);
+        }
+        
+        /* On larger screens, the nav bar can become a sidebar */
+        @media (min-width: 768px) {
+            #app-container {
+                flex-direction: row;
+            }
+            main {
+                border-right: 1px solid var(--border-color);
+            }
+            nav {
+                flex-direction: column;
+                justify-content: flex-start;
+                height: 100%;
+                width: 80px;
+                padding-top: 2rem;
+            }
+            .nav-button {
+                width: 100% !important;
+                margin-bottom: 1rem;
+            }
+        }
+
+        main {
+            flex: 1 1 0;
+            overflow: hidden;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+        }
+        
+        nav {
+            flex-shrink: 0;
+        }
+
+        /* Common styles */
+        .bg-primary { background-color: var(--bg-primary); }
+        .bg-secondary { background-color: var(--bg-secondary); }
+        .text-primary { color: var(--text-primary); }
+        .text-secondary { color: var(--text-secondary); }
+        .border-color { border-color: var(--border-color); }
+        .accent-bg { background-color: var(--accent-color); }
+        .accent-text { color: var(--bg-primary); }
+        [data-theme="dark"] .accent-text { color: var(--bg-primary); }
+        [data-theme="light"] .accent-text { color: var(--bg-primary); }
+
+        /* Frosted glass effect for bottom nav only */
+        @media (max-width: 767px) {
+            .frosted-glass {
+                background-color: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border-top: 1px solid var(--border-color);
+            }
+            [data-theme="dark"] .frosted-glass {
+                background-color: rgba(20, 20, 20, 0.7);
+            }
+        }
+
+        /* Nav icon states */
+        .nav-button.active svg { color: var(--text-primary); stroke-width: 2.5px; }
+        .nav-button.active span { font-weight: 600; color: var(--text-primary); }
+
+        /* Shorts section */
+        #shorts-screen {
+            height: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .short-item {
+            height: 100%;
+            width: 100%;
+            flex-shrink: 0;
+            scroll-snap-align: start;
+        }
+        
+        /* Theme Toggle Switch */
+        .theme-switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #374151; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* Like button animation */
+        .like-button svg.liked {
+            fill: #ef4444;
+            stroke: #ef4444;
+            transform: scale(1.1);
+        }
+        .like-button svg {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* Follow button style */
+        .follow-button.followed {
+            background-color: var(--accent-color);
+            color: var(--bg-primary);
+            border-color: var(--accent-color);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Fullscreen Welcome Overlay -->
+    <div id="fullscreen-overlay" class="absolute inset-0 bg-black flex flex-col items-center justify-center z-50 transition-opacity duration-300">
+        <div class="text-center text-white p-8">
+            <svg class="mx-auto" xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+            <h1 class="text-4xl font-bold mt-4">Invest Connect</h1>
+            <p class="text-lg text-gray-400 mt-2">Tap to enter the ultimate experience.</p>
+            <button id="fullscreen-button" class="mt-8 bg-white text-black font-semibold py-3 px-12 rounded-lg text-lg active:scale-95 transition-transform">
+                Launch App
+            </button>
+        </div>
+    </div>
+
+    <div id="app-container" style="visibility: hidden;">
+        <!-- Main Content Area -->
+        <main>
+            <section id="ideas-screen" class="p-4 md:p-8 h-full flex flex-col space-y-4 overflow-y-auto">
+                 <h1 class="text-3xl md:text-4xl font-bold p-2 text-primary">Ideas</h1>
+                 <div class="bg-secondary rounded-xl p-5 border border-color flex-shrink-0">
+                    <div class="flex items-start justify-between">
+                        <div><h2 class="text-xl font-bold text-primary">Project Neo</h2><p class="text-sm text-secondary mt-1">AI-powered personal finance management.</p></div>
+                        <div class="text-right"><p class="text-lg font-semibold text-primary">15% Equity</p><p class="text-sm text-secondary">at $250,000</p></div>
+                    </div>
+                    <p class="text-primary mt-4 text-sm leading-relaxed">A revolutionary platform that uses machine learning to provide hyper-personalized financial advice, automate savings, and optimize investment portfolios for millennials.</p>
+                    <button class="invest-button w-full accent-bg accent-text font-semibold py-3 rounded-lg mt-5 active:scale-95 transition-transform">Send Invitation</button>
+                </div>
+                 <div class="bg-secondary rounded-xl p-5 border border-color flex-shrink-0">
+                     <div class="flex items-start justify-between">
+                        <div><h2 class="text-xl font-bold text-primary">AquaPure</h2><p class="text-sm text-secondary mt-1">Sustainable water filtration system.</p></div>
+                        <div class="text-right"><p class="text-lg font-semibold text-primary">10% Equity</p><p class="text-sm text-secondary">at $500,000</p></div>
+                    </div>
+                    <p class="text-primary mt-4 text-sm leading-relaxed">Patented membrane technology that removes microplastics and contaminants from water sources with minimal energy consumption, designed for industrial and residential use.</p>
+                    <button class="invest-button w-full accent-bg accent-text font-semibold py-3 rounded-lg mt-5 active:scale-95 transition-transform">Send Invitation</button>
+                </div>
+            </section>
+            
+            <section id="pitch-screen" class="p-6 md:p-8 h-full hidden flex-col overflow-y-auto">
+                <h1 class="text-3xl md:text-4xl font-bold mb-2 text-primary">Pitch Your Idea</h1>
+                <p class="text-secondary mb-8">Share your patented idea with the world.</p>
+                <div class="space-y-6 flex-grow">
+                    <div>
+                        <label class="block text-sm font-medium text-secondary mb-2">Idea Title</label>
+                        <input type="text" class="w-full bg-secondary border border-color rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-primary" placeholder="e.g., Eco-Friendly Drone Delivery">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-secondary mb-2">Brief Description</label>
+                        <textarea rows="4" class="w-full bg-secondary border border-color rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all text-primary" placeholder="Describe the core concept and problem it solves."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-secondary mb-2">Pitch Video (Mandatory)</label>
+                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md border-color">
+                            <div class="space-y-1 text-center">
+                                <svg class="mx-auto h-12 w-12 text-secondary" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                                <div class="flex text-sm text-secondary"><label for="file-upload-video" class="relative cursor-pointer bg-secondary rounded-md font-medium text-primary hover:text-indigo-500 focus-within:outline-none"><span>Upload a video</span><input id="file-upload-video" name="file-upload-video" type="file" class="sr-only" accept="video/*"></label><p class="pl-1">or drag and drop</p></div><p class="text-xs text-secondary">MP4, MOV up to 50MB</p>
+                            </div>
+                        </div>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-secondary mb-2">Patent Documents (Optional)</label>
+                         <input type="file" class="w-full text-sm text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-primary hover:file:bg-tertiary" multiple accept=".pdf,.doc,.docx">
+                    </div>
+                </div>
+                <button class="w-full accent-bg accent-text font-semibold py-4 rounded-lg mt-8 active:scale-95 transition-transform flex-shrink-0">Submit Pitch</button>
+            </section>
+            
+            <section id="shorts-screen" class="h-full w-full bg-black hidden flex-col">
+                <!-- Short Item 1 -->
+                <div class="short-item bg-black relative flex items-end p-4">
+                    <div class="flex-grow text-white z-10">
+                        <div class="flex items-center gap-2"><h3 class="font-bold text-lg">Dev Workflow</h3><button class="follow-button text-sm font-semibold border px-3 py-1 rounded-full border-white text-white transition-colors">Follow</button></div>
+                        <p class="text-sm mt-1">Streamlining code pipelines for peak efficiency.</p>
+                    </div>
+                    <div class="flex flex-col items-center space-y-5 z-10 text-white">
+                        <button class="like-button flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span class="text-xs">1.2k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg><span class="text-xs">345</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg><span class="text-xs">102</span></button>
+                    </div>
+                </div>
+                <!-- Short Item 2 -->
+                <div class="short-item bg-black relative flex items-end p-4">
+                    <div class="flex-grow text-white z-10">
+                        <div class="flex items-center gap-2"><h3 class="font-bold text-lg">Eco-Packaging</h3><button class="follow-button text-sm font-semibold border px-3 py-1 rounded-full border-white text-white transition-colors">Follow</button></div>
+                        <p class="text-sm mt-1">Compostable packaging from seaweed.</p>
+                    </div>
+                    <div class="flex flex-col items-center space-y-5 z-10 text-white">
+                        <button class="like-button flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span class="text-xs">5.8k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg><span class="text-xs">987</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg><span class="text-xs">451</span></button>
+                    </div>
+                </div>
+                 <!-- Short Item 3 -->
+                <div class="short-item bg-black relative flex items-end p-4">
+                    <div class="flex-grow text-white z-10">
+                        <div class="flex items-center gap-2"><h3 class="font-bold text-lg">AI Health Coach</h3><button class="follow-button text-sm font-semibold border px-3 py-1 rounded-full border-white text-white transition-colors">Follow</button></div>
+                        <p class="text-sm mt-1">Personalized fitness plans using machine learning.</p>
+                    </div>
+                     <div class="flex flex-col items-center space-y-5 z-10 text-white">
+                        <button class="like-button flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span class="text-xs">12.1k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg><span class="text-xs">2.3k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg><span class="text-xs">1.1k</span></button>
+                    </div>
+                </div>
+                 <!-- Short Item 4 -->
+                <div class="short-item bg-black relative flex items-end p-4">
+                    <div class="flex-grow text-white z-10">
+                        <div class="flex items-center gap-2"><h3 class="font-bold text-lg">Quantum Encryption</h3><button class="follow-button text-sm font-semibold border px-3 py-1 rounded-full border-white text-white transition-colors">Follow</button></div>
+                        <p class="text-sm mt-1">Unbreakable data security for enterprises.</p>
+                    </div>
+                     <div class="flex flex-col items-center space-y-5 z-10 text-white">
+                        <button class="like-button flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span class="text-xs">9.7k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg><span class="text-xs">1.5k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg><span class="text-xs">842</span></button>
+                    </div>
+                </div>
+                 <!-- Short Item 5 -->
+                 <div class="short-item bg-black relative flex items-end p-4">
+                    <div class="flex-grow text-white z-10">
+                        <div class="flex items-center gap-2"><h3 class="font-bold text-lg">Urban Farming Pods</h3><button class="follow-button text-sm font-semibold border px-3 py-1 rounded-full border-white text-white transition-colors">Follow</button></div>
+                        <p class="text-sm mt-1">Automated vertical farms for city dwellers.</p>
+                    </div>
+                     <div class="flex flex-col items-center space-y-5 z-10 text-white">
+                        <button class="like-button flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg><span class="text-xs">22k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/></svg><span class="text-xs">4.1k</span></button>
+                        <button class="flex flex-col items-center"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg><span class="text-xs">3.9k</span></button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="news-screen" class="p-4 md:p-8 h-full hidden flex-col space-y-4 overflow-y-auto">
+                 <h1 class="text-3xl md:text-4xl font-bold p-2 text-primary">Startup News</h1>
+                 <div class="bg-secondary rounded-xl p-4 border border-color flex items-center gap-4 flex-shrink-0">
+                    <img src="https://images.pexels.com/photos/3184418/pexels-photo-3184418.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="w-24 h-24 rounded-lg object-cover" alt="Startup meeting"/>
+                    <div><p class="text-sm font-medium text-secondary">TechCrunch</p><h3 class="font-bold text-primary mt-1">Global VC funding hits a two-year high in Q3</h3></div>
+                 </div>
+                 <div class="bg-secondary rounded-xl p-4 border border-color flex items-center gap-4 flex-shrink-0">
+                    <img src="https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" class="w-24 h-24 rounded-lg object-cover" alt="Charts and graphs"/>
+                    <div><p class="text-sm font-medium text-secondary">Axios Pro</p><h3 class="font-bold text-primary mt-1">The rise of sustainable tech startups in emerging markets</h3></div>
+                 </div>
+            </section>
+            
+            <section id="settings-screen" class="p-6 md:p-8 h-full hidden flex-col">
+                <h1 class="text-3xl md:text-4xl font-bold text-primary">Settings</h1>
+                <div class="mt-8 bg-secondary p-4 rounded-lg border border-color">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-primary">Dark Mode</span>
+                        <label class="theme-switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Navigation: bottom bar on mobile, sidebar on tablet+ -->
+        <nav class="frosted-glass bg-primary h-[80px] md:h-full md:w-24 flex md:flex-col justify-around md:justify-start items-center md:items-start pt-3 md:pt-8 md:px-2">
+            <button class="nav-button flex flex-col items-center justify-center text-secondary w-1/5" data-target="ideas-screen"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5C17.7 10.2 18 9 18 8c0-2.2-1.8-4-4-4-2.2 0-4 1.8-4 4s.3 2.2 1.5 3.5c.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg><span class="text-xs mt-1">Ideas</span></button>
+            <button class="nav-button flex flex-col items-center justify-center text-secondary w-1/5" data-target="pitch-screen"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg><span class="text-xs mt-1">Pitch</span></button>
+            <button class="nav-button flex flex-col items-center justify-center text-secondary w-1/5" data-target="shorts-screen"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg><span class="text-xs mt-1">Shorts</span></button>
+            <button class="nav-button flex flex-col items-center justify-center text-secondary w-1/5" data-target="news-screen"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h0"/><path d="M16 4h2v4h-2Z"/><path d="M12 4h2v4h-2Z"/><path d="M8 8h2v4H8Z"/></svg><span class="text-xs mt-1">News</span></button>
+            <button class="nav-button flex flex-col items-center justify-center text-secondary w-1/5" data-target="settings-screen"><svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2.15l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2.15l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><span class="text-xs mt-1">Settings</span></button>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const fullscreenButton = document.getElementById('fullscreen-button');
+            const fullscreenOverlay = document.getElementById('fullscreen-overlay');
+            const appContainer = document.getElementById('app-container');
+            const navButtons = document.querySelectorAll('.nav-button');
+            const screens = document.querySelectorAll('main > section');
+            const themeToggle = document.getElementById('theme-toggle');
+
+            // --- Fullscreen and App Launch ---
+            fullscreenButton.addEventListener('click', () => {
+                const elem = document.documentElement;
+
+                const launchApp = () => {
+                    fullscreenOverlay.style.opacity = '0';
+                    appContainer.style.visibility = 'visible';
+                    setTimeout(() => {
+                        fullscreenOverlay.style.display = 'none';
+                    }, 300);
+                };
+
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().then(launchApp).catch(() => launchApp());
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen().then(launchApp).catch(() => launchApp());
+                } else {
+                    launchApp();
+                }
+            });
+
+            // --- Screen Navigation ---
+            function switchScreen(targetId) {
+                screens.forEach(screen => {
+                    if (screen.id === targetId) {
+                        screen.style.display = 'flex';
+                    } else {
+                        screen.style.display = 'none';
+                    }
+                });
+                navButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.target === targetId);
+                });
+            }
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => switchScreen(button.dataset.target));
+            });
+            
+            // --- Theme Management ---
+            function applyTheme(theme) {
+                document.documentElement.setAttribute('data-theme', theme);
+                themeToggle.checked = (theme === 'dark');
+            }
+            themeToggle.addEventListener('change', () => {
+                const newTheme = themeToggle.checked ? 'dark' : 'light';
+                localStorage.setItem('theme', newTheme);
+                applyTheme(newTheme);
+            });
+            const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(savedTheme);
+            
+            // --- Shorts Interaction ---
+            const likeButtons = document.querySelectorAll('.like-button');
+            likeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const svg = button.querySelector('svg');
+                    svg.classList.toggle('liked');
+                });
+            });
+
+            const followButtons = document.querySelectorAll('.follow-button');
+            followButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    if (button.textContent === 'Follow') {
+                        button.textContent = 'Followed';
+                        button.classList.add('followed');
+                    } else {
+                        button.textContent = 'Follow';
+                        button.classList.remove('followed');
+                    }
+                });
+            });
+
+
+            // Set initial screen
+            switchScreen('ideas-screen');
+        });
+    </script>
+</body>
+</html>
+
